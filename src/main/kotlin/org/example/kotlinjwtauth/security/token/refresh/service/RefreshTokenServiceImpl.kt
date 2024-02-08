@@ -36,13 +36,10 @@ class RefreshTokenServiceImpl(
     }
 
     @Transactional
-    override fun createRefreshTokenByUserId(userId: Long): ResponseCookie {
-        val user: User = User()
-        user.id = userId
-        val refreshToken = RefreshToken(
-            user
-        )
+    override fun createRefreshTokenByUserId(user: User): ResponseCookie {
+        val refreshToken = RefreshToken(user)
         val tokenWithId = saveToken(refreshToken)
+
         val responseCookie = tokenUtils.generateRefreshTokenCookie(tokenWithId.id!!)
         tokenWithId.hashedToken = hashService.hashStringWithSHA256(responseCookie.value)
         saveToken(tokenWithId)

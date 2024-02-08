@@ -10,9 +10,11 @@ import org.springframework.transaction.annotation.Transactional
 
 
 @Repository
-interface RefreshTokenRepository : JpaRepository<RefreshToken?, Long?> {
+interface RefreshTokenRepository : JpaRepository<RefreshToken, Long> {
+
     @Transactional
     @Modifying
     @Query("update RefreshToken r set r.hashedToken = :hashedToken where r.id = :id")
-    fun updateHashedTokenById(@Param("hashedToken") hashedToken: String?, @Param("id") id: Long?)
+    fun updateHashedTokenById(@Param("hashedToken") hashedToken: String, @Param("id") id: Long)
+
 }

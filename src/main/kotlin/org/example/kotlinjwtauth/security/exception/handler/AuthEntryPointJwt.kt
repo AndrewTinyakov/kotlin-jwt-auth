@@ -3,6 +3,8 @@ package org.example.kotlinjwtauth.security.exception.handler
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.security.core.AuthenticationException
 import org.springframework.security.web.AuthenticationEntryPoint
@@ -12,6 +14,9 @@ import java.io.IOException
 
 @Component
 class AuthEntryPointJwt : AuthenticationEntryPoint {
+
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+
     @Throws(IOException::class)
     override fun commence(
         request: HttpServletRequest,
@@ -29,4 +34,5 @@ class AuthEntryPointJwt : AuthenticationEntryPoint {
         mapper.writeValue(response.outputStream, body)
         log.debug("Bad credentials")
     }
+
 }

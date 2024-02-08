@@ -5,12 +5,35 @@ import org.example.kotlinjwtauth.user.model.User
 
 @Entity
 @Table(name = "refresh_tokens")
-class RefreshToken(@field:JoinColumn(name = "user_id") @field:ManyToOne(fetch = FetchType.LAZY) private val user: User) {
+data class RefreshToken(
+    @field:JoinColumn(name = "user_id")
+    @field:ManyToOne(fetch = FetchType.LAZY)
+    val user: User
+) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "refresh_token_id")
-    private var id: Long? = null
+    var id: Long? = null
 
     @Column(name = "token")
-    private var hashedToken: String? = null
+    var hashedToken: String? = null
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as RefreshToken
+
+        return id == other.id
+    }
+
+    override fun hashCode(): Int {
+        return id?.hashCode() ?: 0
+    }
+
+    override fun toString(): String {
+        return "RefreshToken(id=$id)"
+    }
+
+
 }

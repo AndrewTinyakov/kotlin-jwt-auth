@@ -8,6 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
 class CorsConfig : WebMvcConfigurer {
+
     @Value("\${security.origins}")
     private val origins: String? = null
 
@@ -23,4 +24,5 @@ class CorsConfig : WebMvcConfigurer {
             .allowedOrigins(origins)
             .allowCredentials(true)
     }
+
 }

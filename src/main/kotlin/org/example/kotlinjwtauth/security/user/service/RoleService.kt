@@ -6,7 +6,7 @@ import java.util.*
 
 
 interface RoleService {
-    fun saveRole(role: UserRole?)
+    fun saveRole(role: UserRole)
 
-    fun findRoleByName(roleName: Role?): Optional<UserRole?>?
+    fun findRoleByName(roleName: Role): Optional<UserRole>
 }

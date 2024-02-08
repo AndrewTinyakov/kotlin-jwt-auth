@@ -5,6 +5,8 @@ import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
 import io.jsonwebtoken.security.SignatureException
 import jakarta.servlet.http.HttpServletRequest
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Component
@@ -15,6 +17,9 @@ import java.util.*
 
 @Component
 class TokenUtilsImpl : TokenUtils {
+
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+
     @Value("\${jwt.access-secret}")
     private val accessJwtSecret: String? = null
 
@@ -43,12 +48,12 @@ class TokenUtilsImpl : TokenUtils {
         return generateCookie(refreshTokenName, refreshToken, true)
     }
 
-    override fun getAccessTokenFromCookies(request: HttpServletRequest): String {
-        return getCookieValueByName(request, accessTokenName)!!
+    override fun getAccessTokenFromCookies(request: HttpServletRequest): String? {
+        return getCookieValueByName(request, accessTokenName!!)
     }
 
-    override fun getRefreshTokenFromCookies(request: HttpServletRequest): String {
-        return getCookieValueByName(request, refreshTokenName)!!
+    override fun getRefreshTokenFromCookies(request: HttpServletRequest): String? {
+        return getCookieValueByName(request, refreshTokenName!!)
     }
 
     override fun getCleanAccessTokenCookie(): ResponseCookie {
@@ -107,51 +112,34 @@ class TokenUtilsImpl : TokenUtils {
             .compact()
     }
 
-    override fun validateJwtAccessToken(authToken: String): Boolean {
-        if (authToken == null) {
+    override fun validateJwtAccessToken(authToken: String?): Boolean {
+        if(authToken == null){
             return false
         }
-        try {
-            Jwts.parserBuilder()
-                .setSigningKey(accessSignInKey)
-                .build()
-                .parseClaimsJws(authToken)
-            return true
-        } catch (e: SignatureException) {
-            log.warn("Invalid JWT signature: {}", e.message)
-        } catch (e: MalformedJwtException) {
-            log.warn("Invalid JWT token: {}", e.message)
-        } catch (e: ExpiredJwtException) {
-            log.debug("JWT token is expired: {}", e.message)
-        } catch (e: UnsupportedJwtException) {
-            log.warn("JWT token is unsupported: {}", e.message)
-        } catch (e: IllegalArgumentException) {
-            log.debug("JWT claims string is empty: {}", e.message)
-        }
-
-        return false
+        return validateJwt(authToken, accessSignInKey)
     }
 
     override fun validateJwtRefreshToken(refreshToken: String): Boolean {
-        if (refreshToken == null) {
-            return false
-        }
+        return validateJwt(refreshToken, refreshSignInKey)
+    }
+
+    private fun validateJwt(token: String, key: Key): Boolean {
         try {
             Jwts.parserBuilder()
-                .setSigningKey(refreshSignInKey)
+                .setSigningKey(key)
                 .build()
-                .parseClaimsJws(refreshToken)
+                .parseClaimsJws(token)
             return true
         } catch (e: SignatureException) {
-            log.warn("Invalid JWT signature: {}", e.message)
+            log.warn("Invalid $token signature: ${e.message}")
         } catch (e: MalformedJwtException) {
-            log.warn("Invalid JWT token: {}", e.message)
+            log.warn("Invalid $token token: ${e.message}")
         } catch (e: ExpiredJwtException) {
-            log.debug("JWT token is expired: {}", e.message)
+            log.debug("$token token is expired: ${e.message}")
         } catch (e: UnsupportedJwtException) {
-            log.warn("JWT token is unsupported: {}", e.message)
+            log.warn("$token token is unsupported: ${e.message}}")
         } catch (e: IllegalArgumentException) {
-            log.debug("JWT claims string is empty: {}", e.message)
+            log.debug("$token claims string is empty: ${e.message}}")
         }
 
         return false
@@ -166,8 +154,8 @@ class TokenUtilsImpl : TokenUtils {
             .build()
     }
 
-    private fun getCookieValueByName(request: HttpServletRequest, name: String?): String? {
-        val cookie = WebUtils.getCookie(request, name!!)
+    private fun getCookieValueByName(request: HttpServletRequest, name: String): String? {
+        val cookie = WebUtils.getCookie(request, name)
         return cookie?.value
     }
 

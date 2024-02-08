@@ -1,18 +1,17 @@
 package org.example.kotlinjwtauth.user.service
 
 import org.example.kotlinjwtauth.user.model.User
-import java.util.*
 
 interface UserService {
-    fun findOptionalUserById(id: Long?): Optional<User?>?
+    fun findOptionalUserById(id: Long): User?
 
-    fun register(user: User?): User?
+    fun register(user: User): User
 
-    val currentUser: User?
+    fun getCurrentUser(): User
 
-    fun findUserByUsername(username: String?): Optional<User?>?
+    fun findUserByUsername(username: String): User?
 
-    fun existsByUsername(username: String?): Boolean
+    fun existsByUsername(username: String): Boolean
 
-    fun existsByEmail(email: String?): Boolean
+    fun existsByEmail(email: String): Boolean
 }

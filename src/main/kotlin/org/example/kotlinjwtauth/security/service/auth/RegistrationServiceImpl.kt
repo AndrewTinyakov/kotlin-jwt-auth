@@ -10,6 +10,8 @@ import org.example.kotlinjwtauth.security.user.model.UserRole
 import org.example.kotlinjwtauth.security.user.service.RoleService
 import org.example.kotlinjwtauth.user.model.User
 import org.example.kotlinjwtauth.user.service.UserService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -20,11 +22,14 @@ class RegistrationServiceImpl(
     private val roleService: RoleService,
     private val appInit: AppInit
 ) : RegistrationService {
+
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+
     @Transactional
     override fun registration(signUpRequest: SignUpRequest) {
         validateRegistration(signUpRequest)
         val user = createUser(signUpRequest)
-        log.debug("User registered: id={}, username={}", user.getId(), user.getUsername())
+        log.debug("User registered: id={}, username={}", user.id, user.username)
     }
 
     private fun validateRegistration(request: SignUpRequest) {
@@ -46,14 +51,14 @@ class RegistrationServiceImpl(
     }
 
     private fun createUser(signUpRequest: SignUpRequest): User {
-        val roles: MutableSet<UserRole?> = HashSet()
-        var userRole = roleService.findRoleByName(Role.ROLE_USER)
+        val roles: MutableSet<UserRole> = HashSet()
+        var userRole: UserRole? = roleService.findRoleByName(Role.ROLE_USER)
             .orElse(null)
         if (userRole == null) {
             log.warn("Roles are null")
             appInit.insertRoles()
             userRole = roleService.findRoleByName(Role.ROLE_USER)
-                .orElseThrow()
+                .orElseThrow() as UserRole
         }
         roles.add(userRole)
         val user = User(signUpRequest, roles)

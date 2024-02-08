@@ -4,5 +4,5 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 
 interface CustomUserDetailsService : UserDetailsService {
-    fun loadUserById(id: String?): UserDetails?
+    fun loadUserById(id: String): UserDetails
 }

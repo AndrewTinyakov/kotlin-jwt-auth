@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-interface RoleRepository : JpaRepository<UserRole?, Long?> {
-    fun findByName(name: Role?): Optional<UserRole?>?
+interface RoleRepository : JpaRepository<UserRole, Long> {
+    fun findByName(name: Role): Optional<UserRole>
 }

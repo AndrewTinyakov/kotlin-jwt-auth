@@ -1,1 +1,36 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/database_name
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
 
+server:
+  port: 8080
+
+jwt:
+  access-secret: '6309929402bc1e5b0d775624504f1491edbe574c702930e6d3f5e9c6d27756729d98194b0db02adfbd993dfbf8d81b708944ca164626bfe26979fc5884f753d64e952fa5326cafb6670bd7c0bf6eb484385bb97f5830b3186254c33bd518906912ab16d0606d606ac629947bd73230ea8cc8cb7f880c22524720080920bffe6a39a2f761a8e295034155449584769ccd2b29431347681f185f2d9aac7ec890caf83963aa2cb73d12bc30b3e33ca580a49726690269df091530627bbbbff3fdd2dd9cd957409f7221fa9ab48c809cc59cc1d9f532d95e60f94eda0ef7bd4ff94b4c3f89f3f930ec3bea43fe43297e6a2203449a61bf0d9bbdf8ff65d2ff9d93e3'
+  refresh-secret: '63099dfgjgdf29402bc1e5b0d775624504f1491edbe574c702930e6d3f5e9c6d27756729d98194b93dfbf8d81b708944ca164626bfe26979dfgdfgdfgdf656gdfgfc5884f753d64e952fa5326cafb6670bd7c0bf6eb484385bb97f5830b3186254c33bd518906912ab16d0606d606ac629947bd73230ea8cc8cb7f880c2fgh87sdg8jfh2524720080920bffe6a39a2f761a8e295034155449584769ccd2b29431347681f185f2d9aac7ec890caf83963aa2dfgdfgcb73d12bc30b3e33ca580a49726690269df091530627bbbbff3fdd2dd9cd957409f7221fa9ab48c809cc59cc1d9f532d95e60f94eda0ef7bd4ff94b4c3f89f3f930ec3bea43fe43297e6a2203449a61bf0d9bbdf8ff65d2ff9d93e3'
+  expiration-ms: 7200000
+  #  expiration-ms: 10000
+  refresh-expiration-ms: 1296000000
+  access-token-name: 'access-token'
+  refresh-token-name: 'refresh-token'
+
+
+security:
+  origins: 'http://localhost:3000/'
+  endpoints:
+    unauthorized:
+      - '/api/auth/**'
+      - '/actuator/**'
+      - '/swagger-ui/**'
+      - '/swagger-ui.html'
+      - '/v3/api-docs/**'
+    authorized:
+      - '/api/users/current-user'
+    optionally-authorized:
+      - '/api/users/**'

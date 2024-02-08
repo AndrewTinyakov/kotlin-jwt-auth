@@ -1,14 +1,11 @@
 package org.example.kotlinjwtauth.security.payload.request
 
-import lombok.AllArgsConstructor
+import org.example.kotlinjwtauth.user.validation.annotation.PasswordValidation
+import org.example.kotlinjwtauth.user.validation.annotation.UsernameValidation
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-class LoginRequest {
-    @UsernameValidation
-    private val username: String? = null
-
-    @PasswordValidation
-    private val password: String? = null
-}
+data class LoginRequest(
+    @field:UsernameValidation
+    val username: String,
+    @field:PasswordValidation
+    val password: String
+)

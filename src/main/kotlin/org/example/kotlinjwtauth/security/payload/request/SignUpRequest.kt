@@ -4,13 +4,12 @@ import org.example.kotlinjwtauth.user.validation.annotation.EmailValidation
 import org.example.kotlinjwtauth.user.validation.annotation.PasswordValidation
 import org.example.kotlinjwtauth.user.validation.annotation.UsernameValidation
 
-class SignUpRequest {
-    @UsernameValidation
-    private val username: String? = null
+data class SignUpRequest(
+    @field:UsernameValidation
+    val username: String,
+    @field:EmailValidation
+    val email: String,
+    @field:PasswordValidation
+    val password: String
+)
 
-    @EmailValidation
-    private val email: String? = null
-
-    @PasswordValidation
-    private val password: String? = null
-}

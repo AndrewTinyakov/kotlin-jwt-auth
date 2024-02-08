@@ -6,6 +6,8 @@ import org.example.kotlinjwtauth.security.payload.request.LoginRequest
 import org.example.kotlinjwtauth.security.payload.request.SignUpRequest
 import org.example.kotlinjwtauth.security.service.auth.LoginService
 import org.example.kotlinjwtauth.security.service.auth.RegistrationService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -19,6 +21,9 @@ class AuthenticationController(
     private val loginService: LoginService,
     private val registrationService: RegistrationService
 ) {
+
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+
     @PostMapping("/registration")
     fun registerUser(@RequestBody signUpRequest: @Valid SignUpRequest?) {
         log.debug("Register request: username={}", signUpRequest!!.username)
@@ -38,7 +43,7 @@ class AuthenticationController(
     }
 
     @PostMapping("/refresh-token")
-    fun refreshToken(request: HttpServletRequest?): ResponseEntity<*> {
+    fun refreshToken(request: HttpServletRequest): ResponseEntity<*> {
         log.debug("Refresh token request")
 
         val response = loginService.refreshToken(request)
@@ -49,7 +54,7 @@ class AuthenticationController(
     }
 
     @PostMapping("/logout")
-    fun logoutUser(httpServletRequest: HttpServletRequest?): ResponseEntity<String> {
+    fun logoutUser(httpServletRequest: HttpServletRequest): ResponseEntity<String> {
         log.debug("Logout user request")
 
         val response = loginService.logout(httpServletRequest)

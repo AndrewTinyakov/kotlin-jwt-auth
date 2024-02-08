@@ -5,7 +5,7 @@ import org.example.kotlinjwtauth.user.model.User
 import org.example.kotlinjwtauth.user.payload.response.UserDataResponse
 
 interface UserConverter {
-    fun covertUserToResponse(user: User?): UserDataResponse?
+    fun covertUserToResponse(user: User): UserDataResponse
 
-    fun convertCurrentUserToResponse(user: User?): CurrentUserResponse?
+    fun convertCurrentUserToResponse(user: User): CurrentUserResponse
 }

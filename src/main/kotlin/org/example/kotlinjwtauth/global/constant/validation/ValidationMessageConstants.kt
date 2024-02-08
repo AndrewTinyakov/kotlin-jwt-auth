@@ -7,7 +7,7 @@ object ValidationMessageConstants {
     private const val NOT_PASSED_REGEXP = " haven't passed regexp"
 
     private const val EMAIL_FIELD_NAME = "email"
-    const val EMAIL_MESSAGE: String = "Must be an " + EMAIL_FIELD_NAME
+    const val EMAIL_MESSAGE: String = "Must be an $EMAIL_FIELD_NAME"
     const val EMAIL_SIZE_MESSAGE: String = EMAIL_FIELD_NAME + SIZE_MESSAGE
     const val EMAIL_REQUIRED_MESSAGE: String = EMAIL_FIELD_NAME + REQUIRED_MESSAGE
 

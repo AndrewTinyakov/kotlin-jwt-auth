@@ -6,17 +6,22 @@ import org.example.kotlinjwtauth.security.payload.request.LoginRequest
 import org.example.kotlinjwtauth.security.service.utils.HashService
 import org.example.kotlinjwtauth.security.token.dto.TokensDto
 import org.example.kotlinjwtauth.security.token.refresh.exception.InvalidRefreshTokenException
+import org.example.kotlinjwtauth.security.token.refresh.model.RefreshToken
 import org.example.kotlinjwtauth.security.token.refresh.service.RefreshTokenService
 import org.example.kotlinjwtauth.security.token.service.TokenUtils
 import org.example.kotlinjwtauth.security.user.model.UserDetailsImpl
 import org.example.kotlinjwtauth.user.service.UserService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseCookie
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
+import kotlin.system.measureTimeMillis
 
 @Service
 @Transactional(readOnly = true)
@@ -27,24 +32,30 @@ class LoginServiceImpl(
     private val refreshTokenService: RefreshTokenService,
     private val hashService: HashService
 ) : LoginService {
+
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+
     @Transactional(noRollbackFor = [BadCredentialsException::class])
     override fun login(loginRequest: LoginRequest): TokensDto {
-        val user = userService.findUserByUsername(loginRequest.username)
-            .orElseThrow<BadCredentialsException> { BadCredentialsException(BAD_CREDENTIALS) }
-
-        val authentication = authenticationManager.authenticate(
-            UsernamePasswordAuthenticationToken(
-                loginRequest.username,
-                loginRequest.password
+        val accessTokenCookie: ResponseCookie
+        val refreshTokenCookie: ResponseCookie
+        val authentication: Authentication
+        println(measureTimeMillis {
+            authentication = authenticationManager.authenticate(
+                UsernamePasswordAuthenticationToken(
+                    loginRequest.username,
+                    loginRequest.password
+                )
             )
-        )
-
+        })
         val userDetails = Objects.requireNonNull(authentication).principal as UserDetailsImpl
 
-        val accessTokenCookie = tokenUtils.generateJwtCookieByUserId(userDetails.id)
-        val refreshTokenCookie = refreshTokenService.createRefreshTokenByUserId(userDetails.id)
+        accessTokenCookie = tokenUtils.generateJwtCookieByUserId(userDetails.id!!)
+        refreshTokenCookie = refreshTokenService.createRefreshTokenByUserId(userDetails.user)
 
-        log.debug("User logged in: id={}, username={}", user.getId(), user.getUsername())
+        log.debug("User logged in: id={}, username={}", userDetails.id, userDetails.username)
+
+
         return TokensDto(
             accessTokenCookie,
             refreshTokenCookie
@@ -52,8 +63,8 @@ class LoginServiceImpl(
     }
 
     @Transactional
-    override fun logout(request: HttpServletRequest): TokensDto {
-        val refreshToken = tokenUtils.getRefreshTokenFromCookies(request)
+    override fun logout(httpServletRequest: HttpServletRequest): TokensDto {
+        val refreshToken = tokenUtils.getRefreshTokenFromCookies(httpServletRequest)
             ?: throw BadRequestException()
         val idFromRefreshToken: String
         try {
@@ -62,12 +73,13 @@ class LoginServiceImpl(
             throw BadRequestException()
         }
         val id = idFromRefreshToken.toLong()
-        if (!refreshToken.isBlank() && refreshTokenService.existsById(id)) {
+        if (refreshToken.isNotBlank() && refreshTokenService.existsById(id)) {
             refreshTokenService.deleteTokenById(id)
         }
 
-        val jwtAccessCookie: ResponseCookie = tokenUtils.cleanAccessTokenCookie
-        val jwtRefreshCookie: ResponseCookie = tokenUtils.cleanRefreshTokenCookie
+        //todo async
+        val jwtAccessCookie: ResponseCookie = tokenUtils.getCleanAccessTokenCookie()
+        val jwtRefreshCookie: ResponseCookie = tokenUtils.getCleanRefreshTokenCookie()
 
         log.debug("User logged out")
         return TokensDto(
@@ -80,7 +92,7 @@ class LoginServiceImpl(
     override fun refreshToken(request: HttpServletRequest): TokensDto {
         val refreshToken = tokenUtils.getRefreshTokenFromCookies(request)
 
-        if (refreshToken == null || refreshToken.isBlank()) {
+        if (refreshToken.isNullOrBlank()) {
             log.warn("Invalid refresh token")
             throw InvalidRefreshTokenException()
         }
@@ -90,23 +102,23 @@ class LoginServiceImpl(
         }
         val idFromRefreshToken = tokenUtils.getIdFromRefreshToken(refreshToken)
 
-        val token =
+        val token: RefreshToken =
             refreshTokenService.findById(idFromRefreshToken)
                 .orElseThrow { InvalidRefreshTokenException() }
 
-        val matches = hashService.verifySHA256Hash(refreshToken, token.getHashedToken())
+        val matches = hashService.verifySHA256Hash(refreshToken, token.hashedToken!!)
         if (!matches) {
             log.warn("Refresh token hash doesnt match")
             throw InvalidRefreshTokenException()
         }
-        val newRefreshTokenCookie = tokenUtils.generateRefreshTokenCookie(token.getId())
+        val newRefreshTokenCookie = tokenUtils.generateRefreshTokenCookie(token.id!!)
 
-        refreshTokenService.updateTokenValueAndEncode(newRefreshTokenCookie.value, token.getId())
+        refreshTokenService.updateTokenValueAndEncode(newRefreshTokenCookie.value, token.id!!)
 
-        val accessTokenCookie = tokenUtils.generateJwtCookieByUserId(token.getUser().getId())
+        val accessTokenCookie = tokenUtils.generateJwtCookieByUserId(token.user.id!!)
 
         //
-        log.debug("Refresh token: userId={}, tokenId={}", token.getUser().getId(), token.getId())
+        log.debug("Refresh token: userId={}, tokenId={}", token.user.id, token.id)
         return TokensDto(
             accessTokenCookie,
             newRefreshTokenCookie

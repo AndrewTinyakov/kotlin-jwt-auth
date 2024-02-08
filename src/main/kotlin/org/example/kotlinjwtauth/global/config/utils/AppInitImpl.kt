@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component
 @Component
 class AppInitImpl(private val roleService: RoleService) : AppInit {
     override fun insertRoles() {
+        //todo async
         roleService.saveRole(UserRole(Role.ROLE_ADMIN))
         roleService.saveRole(UserRole(Role.ROLE_USER))
     }

@@ -8,10 +8,15 @@ import java.io.Serial
 import java.util.stream.Collectors
 
 
-class UserDetailsImpl(
-    override var id: Long?, override val username: String, override var email: String, override val password: String,
-    private val authorities: Collection<GrantedAuthority>
-) : User(), UserDetails {
+data class UserDetailsImpl(
+    var id: Long?,
+    private var username: String,
+    private var email: String,
+    private var password: String,
+    private val authorities: Collection<GrantedAuthority>,
+    val user: User
+) : UserDetails {
+
     override fun getAuthorities(): Collection<GrantedAuthority> {
         return authorities
     }
@@ -40,11 +45,17 @@ class UserDetailsImpl(
         return true
     }
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null || javaClass != o.javaClass) return false
-        val user = o as UserDetailsImpl
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val user = other as UserDetailsImpl
         return id == user.id
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + (id?.hashCode() ?: 0)
+        return result
     }
 
     companion object {
@@ -61,7 +72,8 @@ class UserDetailsImpl(
                 user.username,
                 user.email,
                 user.password,
-                authorities
+                authorities,
+                user
             )
         }
     }

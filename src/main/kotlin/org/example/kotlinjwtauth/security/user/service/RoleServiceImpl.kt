@@ -10,12 +10,16 @@ import java.util.*
 @Service
 @Transactional(readOnly = true)
 class RoleServiceImpl(private val roleRepository: RoleRepository) : RoleService {
+
     @Transactional
     override fun saveRole(role: UserRole) {
         roleRepository.save(role)
     }
 
-    override fun findRoleByName(roleName: Role): Optional<UserRole> {
+    override fun findRoleByName(
+        roleName: Role
+    ): Optional<UserRole> {
         return roleRepository.findByName(roleName)
     }
+
 }

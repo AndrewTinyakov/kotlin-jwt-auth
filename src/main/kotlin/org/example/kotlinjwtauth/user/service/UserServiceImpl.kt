@@ -1,17 +1,22 @@
 package org.example.kotlinjwtauth.user.service
 
+import org.example.kotlinjwtauth.security.constraint.exception.AuthExceptionMessageConstants.BAD_CREDENTIALS
 import org.example.kotlinjwtauth.security.exception.ForbiddenException
 import org.example.kotlinjwtauth.security.user.model.UserDetailsImpl
 import org.example.kotlinjwtauth.user.model.User
 import org.example.kotlinjwtauth.user.repository.UserRepository
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Lazy
 import org.springframework.security.authentication.AnonymousAuthenticationToken
 import org.springframework.security.authentication.BadCredentialsException
+import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
+import kotlin.jvm.optionals.getOrNull
 
 @Service
 @Transactional(readOnly = true)
@@ -19,13 +24,15 @@ class UserServiceImpl(
     private val userRepository: UserRepository,
     @param:Lazy private val passwordEncoder: PasswordEncoder
 ) : UserService {
-    override fun findOptionalUserById(id: Long): Optional<User> {
-        val user = userRepository.findById(id)
 
-        user.ifPresent { value: User ->
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+
+    override fun findOptionalUserById(id: Long): User? {
+        val user: User? = userRepository.findById(id).getOrNull()
+
+        user?.let { u ->
             log.debug(
-                "Found user by id: id={}, username={}",
-                value.getId(), value.getUsername()
+                "Found user by id: id=${u.id}, username=${u.username}",
             )
         }
 
@@ -34,37 +41,36 @@ class UserServiceImpl(
 
     @Transactional
     override fun register(user: User): User {
-        if (user.getPassword() != null) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()))
-        }
+        user.password = passwordEncoder.encode(user.password)
         val savedUser = userRepository.save(user)
 
-        log.debug("Registered user: id={}, username={}", savedUser.getId(), savedUser.getUsername())
+        log.debug("Registered user: id={}, username={}", savedUser.id, savedUser.username)
         return savedUser
     }
 
     override fun getCurrentUser(): User {
-        val auth = SecurityContextHolder.getContext().authentication
+        val auth: Authentication = SecurityContextHolder.getContext().authentication
+
         if (auth is AnonymousAuthenticationToken) {
             throw BadCredentialsException(BAD_CREDENTIALS)
         }
-        val principal = auth.principal as UserDetailsImpl
+        val principal: UserDetailsImpl = auth.principal as UserDetailsImpl
 
-        val currentUser = findOptionalUserById(principal.id)
-            .orElseThrow { ForbiddenException() }
+        val currentUser: User? = findOptionalUserById(principal.id!!)
+        currentUser ?: throw ForbiddenException()
 
-        log.debug("Got current user: id={}, username={}", currentUser.getId(), currentUser.getUsername())
+        log.debug("Got current user: id={}, username={}", currentUser.id, currentUser.username)
         return currentUser
     }
 
-    override fun findUserByUsername(username: String): Optional<User> {
+    override fun findUserByUsername(username: String): User? {
         val user = userRepository.findByUsername(username)
 
-        user.ifPresent { value: User ->
+        user?.let { value: User ->
             log.debug(
                 "Found user by username: id={}, username={}",
-                value.getId(),
-                value.getUsername()
+                value.id,
+                value.username
             )
         }
         return user

@@ -4,46 +4,65 @@ import jakarta.persistence.*
 import org.example.kotlinjwtauth.security.payload.request.SignUpRequest
 import org.example.kotlinjwtauth.security.token.refresh.model.RefreshToken
 import org.example.kotlinjwtauth.security.user.model.UserRole
-import org.hibernate.proxy.HibernateProxy
 
 @Entity
 @Table(name = "app_users")
-open class User(
-    signUpRequest: SignUpRequest, @field:JoinTable(
-        name = "users_roles",
-        joinColumns = [JoinColumn(name = "user_id")],
-        inverseJoinColumns = [JoinColumn(name = "role_id")]
-    ) @field:ManyToMany private val roles: Set<UserRole>
-) {
+data class User(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private var id: Long? = null
+    var id: Long? = null,
 
     @Column(name = "username")
-    private var username = signUpRequest.username
+    var username: String,
 
     @Column(name = "password")
-    private var password = signUpRequest.password
+    var password: String,
 
     @OneToMany(mappedBy = "user")
-    private val refreshTokens: Set<RefreshToken>? = null
+    var refreshTokens: Set<RefreshToken> = HashSet(),
 
     @Column(name = "email")
-    private var email = signUpRequest.email
+    var email: String,
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null) return false
-        val oEffectiveClass = if (o is HibernateProxy) o.hibernateLazyInitializer.persistentClass else o.javaClass
-        val thisEffectiveClass =
-            if (this is HibernateProxy) (this as HibernateProxy).hibernateLazyInitializer.persistentClass else this.javaClass
-        if (thisEffectiveClass != oEffectiveClass) return false
-        val user = o as User
-        return getId() != null && getId() == user.getId()
+    @ManyToMany
+    @JoinTable(
+        name = "users_roles",
+        joinColumns = [JoinColumn(name = "user_id")],
+        inverseJoinColumns = [JoinColumn(name = "role_id")]
+    )
+    var roles: MutableSet<UserRole> = HashSet()
+
+) {
+    constructor(
+        username: String,
+        password: String,
+        email: String,
+        roles: Set<UserRole>
+    ) : this(null, username, password, HashSet(), email, HashSet(roles))
+
+    constructor(signUpRequest: SignUpRequest, roles: MutableSet<UserRole>) : this(
+        username = signUpRequest.username,
+        password = signUpRequest.password,
+        email = signUpRequest.email,
+        roles = roles
+    )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as User
+
+        return id == other.id
     }
 
     override fun hashCode(): Int {
-        return if (this is HibernateProxy) (this as HibernateProxy).hibernateLazyInitializer.persistentClass.hashCode() else javaClass.hashCode()
+        return id?.hashCode() ?: 0
     }
+
+    override fun toString(): String {
+        return "User(roles=$roles, id=$id, username='$username', email='$email')"
+    }
+
 }
