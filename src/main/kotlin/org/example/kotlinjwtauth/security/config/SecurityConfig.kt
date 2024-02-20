@@ -71,7 +71,8 @@ class SecurityConfig(
                 .requestMatchers(*securityEndpointConfig.authorized.toTypedArray()).authenticated()
                 .requestMatchers(HttpMethod.GET, *securityEndpointConfig.optionallyAuthorized.toTypedArray())
                 .permitAll()
-                .anyRequest().permitAll()
+                .anyRequest()
+                .authenticated()
         }
             .sessionManagement { session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
